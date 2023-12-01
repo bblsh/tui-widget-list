@@ -10,9 +10,12 @@ pub enum WidgetListEnd {
 }
 
 #[derive(Debug, Clone)]
-pub struct WidgetList<'a> {
+pub struct WidgetList<'a, W>
+where
+    W: Widget,
+{
     pub state: WidgetListState,
-    pub items: Vec<WidgetListItem<'a>>,
+    pub items: Vec<WidgetListItem<W>>,
     block: Option<Block<'a>>,
     style: Style,
     start_corner: Corner,
@@ -25,7 +28,10 @@ pub struct WidgetList<'a> {
     follow_end: WidgetListEnd,
 }
 
-impl<'a> Default for WidgetList<'a> {
+impl<'a, W> Default for WidgetList<'a, W>
+where
+    W: Widget,
+{
     fn default() -> Self {
         WidgetList {
             state: WidgetListState::default(),
@@ -41,38 +47,41 @@ impl<'a> Default for WidgetList<'a> {
     }
 }
 
-impl<'a> WidgetList<'a> {
-    pub fn block(mut self, block: Block<'a>) -> WidgetList<'a> {
+impl<'a, W> WidgetList<'a, W>
+where
+    W: Widget,
+{
+    pub fn block(mut self, block: Block<'a>) -> WidgetList<'a, W> {
         self.block = Some(block);
         self
     }
 
-    pub fn style(mut self, style: Style) -> WidgetList<'a> {
+    pub fn style(mut self, style: Style) -> WidgetList<'a, W> {
         self.style = style;
         self
     }
 
-    pub fn highlight_symbol(mut self, highlight_symbol: &'a str) -> WidgetList<'a> {
+    pub fn highlight_symbol(mut self, highlight_symbol: &'a str) -> WidgetList<'a, W> {
         self.highlight_symbol = Some(highlight_symbol);
         self
     }
 
-    pub fn highlight_style(mut self, style: Style) -> WidgetList<'a> {
+    pub fn highlight_style(mut self, style: Style) -> WidgetList<'a, W> {
         self.highlight_style = style;
         self
     }
 
-    pub fn repeat_highlight_symbol(mut self, repeat: bool) -> WidgetList<'a> {
+    pub fn repeat_highlight_symbol(mut self, repeat: bool) -> WidgetList<'a, W> {
         self.repeat_highlight_symbol = repeat;
         self
     }
 
-    pub fn start_corner(mut self, corner: Corner) -> WidgetList<'a> {
+    pub fn start_corner(mut self, corner: Corner) -> WidgetList<'a, W> {
         self.start_corner = corner;
         self
     }
 
-    pub fn follow(mut self, end: WidgetListEnd) -> WidgetList<'a> {
+    pub fn follow(mut self, end: WidgetListEnd) -> WidgetList<'a, W> {
         self.follow_end = end;
         self
     }
@@ -124,14 +133,20 @@ impl<'a> WidgetList<'a> {
     }
 }
 
-impl<'a> Widget for WidgetList<'a> {
+impl<'a, W> Widget for WidgetList<'a, W>
+where
+    W: Widget,
+{
     fn render(self, area: Rect, buf: &mut Buffer) {
         let mut state = WidgetListState::default();
         StatefulWidget::render(self, area, buf, &mut state);
     }
 }
 
-impl<'a> StatefulWidget for WidgetList<'a> {
+impl<'a, W> StatefulWidget for WidgetList<'a, W>
+where
+    W: Widget,
+{
     type State = WidgetListState;
 
     fn render(mut self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
@@ -167,7 +182,7 @@ impl<'a> StatefulWidget for WidgetList<'a> {
             WidgetListEnd::Top => {
                 for (i, item) in self
                     .items
-                    .iter()
+                    .into_iter()
                     .enumerate()
                     .skip(state.offset)
                     .take(end - start)
@@ -220,13 +235,13 @@ impl<'a> StatefulWidget for WidgetList<'a> {
                     }
 
                     // Finally, render the widget in this area
-                    item.clone().render(item_area, buf);
+                    item.render(item_area, buf);
                 }
             }
             WidgetListEnd::Bottom => {
                 for (i, item) in self
                     .items
-                    .iter()
+                    .into_iter()
                     .rev()
                     .enumerate()
                     .skip(state.offset)
@@ -280,7 +295,7 @@ impl<'a> StatefulWidget for WidgetList<'a> {
                     }
 
                     // Finally, render the widget in this area
-                    item.clone().render(item_area, buf);
+                    item.render(item_area, buf);
                 }
             }
         }
@@ -324,8 +339,11 @@ impl WidgetListState {
     }
 }
 
-impl<'a> From<Vec<WidgetListItem<'a>>> for WidgetList<'a> {
-    fn from(value: Vec<WidgetListItem<'a>>) -> WidgetList<'a> {
+impl<'a, W> From<Vec<WidgetListItem<W>>> for WidgetList<'a, W>
+where
+    W: Widget,
+{
+    fn from(value: Vec<WidgetListItem<W>>) -> WidgetList<'a, W> {
         WidgetList {
             state: WidgetListState::default(),
             block: None,

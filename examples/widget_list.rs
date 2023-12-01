@@ -1,3 +1,5 @@
+// Setup code copied from Ratatui's hello_world example
+
 use std::{
     io::{self, Stdout},
     time::Duration,
@@ -14,6 +16,16 @@ use ratatui::{prelude::*, widgets::*};
 
 use tui_widget_list::widget_list::widget_list::WidgetList;
 use tui_widget_list::widget_list::widget_list_item::WidgetListItem;
+
+const DATA2: [(f64, f64); 7] = [
+    (0.0, 0.0),
+    (10.0, 1.0),
+    (20.0, 0.5),
+    (30.0, 1.5),
+    (40.0, 1.0),
+    (50.0, 2.5),
+    (60.0, 3.0),
+];
 
 fn main() -> Result<()> {
     let mut terminal = setup_terminal().context("setup failed")?;
@@ -47,20 +59,54 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
 }
 
 fn render_app(frame: &mut Frame) {
-    let paragraphs = vec![
+    let str_1 = "This is a test with a long line that should be wrappable depending on the terminal width. Hello!";
+    let str_2 = "Testing again with another Paragraph";
+
+    let datasets = vec![Dataset::default()
+        .name("data")
+        .marker(symbols::Marker::Braille)
+        .style(Style::default().fg(Color::Yellow))
+        .graph_type(GraphType::Line)
+        .data(&DATA2)];
+    let chart = Chart::new(datasets)
+        .block(
+            Block::default()
+                .title("Chart 3".cyan().bold())
+                .borders(Borders::ALL),
+        )
+        .x_axis(
+            Axis::default()
+                .title("X Axis")
+                .style(Style::default().fg(Color::Gray))
+                .bounds([0.0, 50.0])
+                .labels(vec!["0".bold(), "25".into(), "50".bold()]),
+        )
+        .y_axis(
+            Axis::default()
+                .title("Y Axis")
+                .style(Style::default().fg(Color::Gray))
+                .bounds([0.0, 5.0])
+                .labels(vec!["0".bold(), "2.5".into(), "5".bold()]),
+        );
+
+    let widget_list_items = vec![
         WidgetListItem::new(
-            Paragraph::new("This is a test. Hello!"),
-            10,
-            textwrap::wrap("This is a test. Hello!", frame.size().width as usize).len() + 1,
+            Paragraph::new(str_1).wrap(Wrap { trim: false }),
+            frame.size().width as usize,
+            textwrap::wrap(str_1, frame.size().width as usize).len(),
         ),
         WidgetListItem::new(
-            Paragraph::new("ANOTHER TEST"),
-            10,
-            textwrap::wrap("ANOTHER TEST", frame.size().width as usize).len() + 1,
+            Paragraph::new(str_2),
+            frame.size().width as usize,
+            textwrap::wrap(str_2, frame.size().width as usize).len(),
         ),
     ];
 
-    let widget_list = WidgetList::from(paragraphs);
+    let widget_list = WidgetList::from(widget_list_items).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .title(" Widget List "),
+    );
 
     frame.render_widget(widget_list, frame.size());
 }

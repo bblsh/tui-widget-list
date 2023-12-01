@@ -1,21 +1,30 @@
 use ratatui::prelude::*;
 use ratatui::widgets::*;
 
-#[derive(Debug, Clone)]
-pub struct WidgetListItem<'a> {
-    item: Paragraph<'a>,
+#[derive(Debug, Clone, Copy)]
+pub struct WidgetListItem<W>
+where
+    W: Widget,
+{
+    item: W,
     width: usize,
     height: usize,
 }
 
-impl<'a> Widget for WidgetListItem<'a> {
+impl<W> Widget for WidgetListItem<W>
+where
+    W: Widget,
+{
     fn render(self, area: Rect, buf: &mut Buffer) {
         self.item.render(area, buf);
     }
 }
 
-impl<'a> WidgetListItem<'a> {
-    pub fn new(widget: Paragraph<'a>, width: usize, height: usize) -> WidgetListItem<'a> {
+impl<W> WidgetListItem<W>
+where
+    W: Widget,
+{
+    pub fn new(widget: W, width: usize, height: usize) -> WidgetListItem<W> {
         WidgetListItem {
             item: widget,
             width,
