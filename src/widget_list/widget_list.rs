@@ -100,7 +100,7 @@ impl<'a> WidgetList<'a> {
             end += 1;
         }
 
-        let selected = selected.unwrap_or(0).min(self.items.len() - 1);
+        let selected = selected.unwrap_or(offset).min(self.items.len() - 1);
         while selected >= end {
             height = height.saturating_add(self.items[end].height());
             end += 1;
