@@ -162,7 +162,7 @@ impl<'a> StatefulWidget for WidgetList<'a> {
 
         for (i, item) in self
             .items
-            .iter_mut()
+            .into_iter()
             .enumerate()
             .skip(state.offset)
             .take(end - start)

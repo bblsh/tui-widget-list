@@ -8,7 +8,7 @@ pub enum WidgetListItemType<'a> {
 }
 
 pub struct WidgetListItem<'a> {
-    widget: Option<WidgetListItemType<'a>>,
+    widget: WidgetListItemType<'a>,
     width: usize,
     height: usize,
 }
@@ -16,7 +16,7 @@ pub struct WidgetListItem<'a> {
 impl<'a> WidgetListItem<'a> {
     pub fn new(widget: WidgetListItemType<'a>, width: usize, height: usize) -> Self {
         Self {
-            widget: Some(widget),
+            widget,
             width,
             height,
         }
@@ -30,13 +30,10 @@ impl<'a> WidgetListItem<'a> {
         self.width
     }
 
-    pub fn render(&mut self, area: Rect, buffer: &mut Buffer) {
-        if self.widget.is_some() {
-            let widget = self.widget.take().unwrap();
-            match widget {
-                WidgetListItemType::Paragraph(p) => p.render(area, buffer),
-                WidgetListItemType::Chart(c) => c.render(area, buffer),
-            }
+    pub fn render(self, area: Rect, buffer: &mut Buffer) {
+        match self.widget {
+            WidgetListItemType::Paragraph(p) => p.render(area, buffer),
+            WidgetListItemType::Chart(c) => c.render(area, buffer),
         }
     }
 }
