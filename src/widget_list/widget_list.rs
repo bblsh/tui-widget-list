@@ -9,13 +9,8 @@ pub enum WidgetListEnd {
     Bottom,
 }
 
-#[derive(Debug, Clone)]
-pub struct WidgetList<'a, W>
-where
-    W: Widget,
-{
-    pub state: WidgetListState,
-    pub items: Vec<WidgetListItem<W>>,
+pub struct WidgetList<'a> {
+    pub items: Vec<WidgetListItem<'a>>,
     block: Option<Block<'a>>,
     style: Style,
     start_corner: Corner,
@@ -28,13 +23,9 @@ where
     follow_end: WidgetListEnd,
 }
 
-impl<'a, W> Default for WidgetList<'a, W>
-where
-    W: Widget,
-{
+impl<'a> Default for WidgetList<'a> {
     fn default() -> Self {
         WidgetList {
-            state: WidgetListState::default(),
             block: None,
             style: Style::default(),
             items: Vec::new(),
@@ -47,41 +38,38 @@ where
     }
 }
 
-impl<'a, W> WidgetList<'a, W>
-where
-    W: Widget,
-{
-    pub fn block(mut self, block: Block<'a>) -> WidgetList<'a, W> {
+impl<'a> WidgetList<'a> {
+    pub fn block(mut self, block: Block<'a>) -> WidgetList<'a> {
         self.block = Some(block);
         self
     }
 
-    pub fn style(mut self, style: Style) -> WidgetList<'a, W> {
+    pub fn style(mut self, style: Style) -> WidgetList<'a> {
         self.style = style;
         self
     }
 
-    pub fn highlight_symbol(mut self, highlight_symbol: &'a str) -> WidgetList<'a, W> {
+    pub fn highlight_symbol(mut self, highlight_symbol: &'a str) -> WidgetList<'a> {
         self.highlight_symbol = Some(highlight_symbol);
         self
     }
 
-    pub fn highlight_style(mut self, style: Style) -> WidgetList<'a, W> {
+    pub fn highlight_style(mut self, style: Style) -> WidgetList<'a> {
         self.highlight_style = style;
         self
     }
 
-    pub fn repeat_highlight_symbol(mut self, repeat: bool) -> WidgetList<'a, W> {
+    pub fn repeat_highlight_symbol(mut self, repeat: bool) -> WidgetList<'a> {
         self.repeat_highlight_symbol = repeat;
         self
     }
 
-    pub fn start_corner(mut self, corner: Corner) -> WidgetList<'a, W> {
+    pub fn start_corner(mut self, corner: Corner) -> WidgetList<'a> {
         self.start_corner = corner;
         self
     }
 
-    pub fn follow(mut self, end: WidgetListEnd) -> WidgetList<'a, W> {
+    pub fn follow(mut self, end: WidgetListEnd) -> WidgetList<'a> {
         self.follow_end = end;
         self
     }
@@ -133,20 +121,14 @@ where
     }
 }
 
-impl<'a, W> Widget for WidgetList<'a, W>
-where
-    W: Widget,
-{
+impl<'a> Widget for WidgetList<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let mut state = WidgetListState::default();
         StatefulWidget::render(self, area, buf, &mut state);
     }
 }
 
-impl<'a, W> StatefulWidget for WidgetList<'a, W>
-where
-    W: Widget,
-{
+impl<'a> StatefulWidget for WidgetList<'a> {
     type State = WidgetListState;
 
     fn render(mut self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
@@ -178,126 +160,62 @@ where
         let mut current_height = 0;
         let has_selection = state.selected.is_some();
 
-        match self.follow_end {
-            WidgetListEnd::Top => {
-                for (i, item) in self
-                    .items
-                    .into_iter()
-                    .enumerate()
-                    .skip(state.offset)
-                    .take(end - start)
-                {
-                    let (x, y) = if self.start_corner == Corner::BottomLeft {
-                        current_height += item.height() as u16;
-                        (list_area.left(), list_area.bottom() - current_height)
-                    } else {
-                        let pos = (list_area.left(), list_area.top() + current_height);
-                        current_height += item.height() as u16;
-                        pos
-                    };
+        for (i, item) in self
+            .items
+            .iter_mut()
+            .enumerate()
+            .skip(state.offset)
+            .take(end - start)
+        {
+            let (x, y) = if self.start_corner == Corner::BottomLeft {
+                current_height += item.height() as u16;
+                (list_area.left(), list_area.bottom() - current_height)
+            } else {
+                let pos = (list_area.left(), list_area.top() + current_height);
+                current_height += item.height() as u16;
+                pos
+            };
 
-                    let area = Rect {
-                        x,
-                        y,
-                        width: list_area.width,
-                        height: item.height() as u16,
-                    };
+            let area = Rect {
+                x,
+                y,
+                width: list_area.width,
+                height: item.height() as u16,
+            };
 
-                    let is_selected = state.selected.map_or(false, |s| s == i);
+            let is_selected = state.selected.map_or(false, |s| s == i);
 
-                    if is_selected {
-                        let count = if self.repeat_highlight_symbol {
-                            item.height()
-                        } else {
-                            1
-                        };
-                        for n in 0..count as u16 {
-                            buf.set_string(x, y + n, highlight_symbol, Style::default());
-                        }
-                    }
-
-                    let symbol_width = if has_selection {
-                        self.highlight_symbol.map_or(0, |s| s.width()) as u16
-                    } else {
-                        0
-                    };
-
-                    let item_area = Rect {
-                        x: area.x + symbol_width,
-                        width: area.width - symbol_width,
-                        ..area
-                    };
-
-                    // Render the WidgetList background style first
-                    // This way individual widgets can display their own styles
-                    if is_selected {
-                        buf.set_style(area, self.highlight_style);
-                    }
-
-                    // Finally, render the widget in this area
-                    item.render(item_area, buf);
+            if is_selected {
+                let count = if self.repeat_highlight_symbol {
+                    item.height()
+                } else {
+                    1
+                };
+                for n in 0..count as u16 {
+                    buf.set_string(x, y + n, highlight_symbol, Style::default());
                 }
             }
-            WidgetListEnd::Bottom => {
-                for (i, item) in self
-                    .items
-                    .into_iter()
-                    .rev()
-                    .enumerate()
-                    .skip(state.offset)
-                    .take(end - start)
-                {
-                    let (x, y) = if self.start_corner == Corner::BottomLeft {
-                        current_height += item.height() as u16;
-                        (list_area.left(), list_area.bottom() - current_height)
-                    } else {
-                        let pos = (list_area.left(), list_area.top() + current_height);
-                        current_height += item.height() as u16;
-                        pos
-                    };
 
-                    let area = Rect {
-                        x,
-                        y,
-                        width: list_area.width,
-                        height: item.height() as u16,
-                    };
+            let symbol_width = if has_selection {
+                self.highlight_symbol.map_or(0, |s| s.width()) as u16
+            } else {
+                0
+            };
 
-                    let is_selected = state.selected.map_or(false, |s| s == i);
+            let item_area = Rect {
+                x: area.x + symbol_width,
+                width: area.width - symbol_width,
+                ..area
+            };
 
-                    if is_selected {
-                        let count = if self.repeat_highlight_symbol {
-                            item.height()
-                        } else {
-                            1
-                        };
-                        for n in 0..count as u16 {
-                            buf.set_string(x, y + n, highlight_symbol, Style::default());
-                        }
-                    }
-
-                    let symbol_width = if has_selection {
-                        self.highlight_symbol.map_or(0, |s| s.width()) as u16
-                    } else {
-                        0
-                    };
-
-                    let item_area = Rect {
-                        x: area.x + symbol_width,
-                        width: area.width - symbol_width,
-                        ..area
-                    };
-
-                    // Render the WidgetList background style first
-                    // This way individual widgets can display their own styles
-                    if is_selected {
-                        buf.set_style(area, self.highlight_style);
-                    }
-
-                    // Finally, render the widget in this area
-                    item.render(item_area, buf);
-                }
+            // Render the WidgetList background style first
+            // This way individual widgets can display their own styles
+            if is_selected {
+                buf.set_style(area, self.highlight_style);
             }
+
+            // Finally, render the widget in this area
+            item.render(item_area, buf);
         }
     }
 }
@@ -339,13 +257,9 @@ impl WidgetListState {
     }
 }
 
-impl<'a, W> From<Vec<WidgetListItem<W>>> for WidgetList<'a, W>
-where
-    W: Widget,
-{
-    fn from(value: Vec<WidgetListItem<W>>) -> WidgetList<'a, W> {
+impl<'a> From<Vec<WidgetListItem<'a>>> for WidgetList<'a> {
+    fn from(value: Vec<WidgetListItem<'a>>) -> WidgetList<'a> {
         WidgetList {
-            state: WidgetListState::default(),
             block: None,
             style: Style::default(),
             items: value,

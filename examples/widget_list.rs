@@ -16,6 +16,7 @@ use ratatui::{prelude::*, widgets::*};
 
 use tui_widget_list::widget_list::widget_list::WidgetList;
 use tui_widget_list::widget_list::widget_list_item::WidgetListItem;
+use tui_widget_list::widget_list::widget_list_item::WidgetListItemType;
 
 const DATA2: [(f64, f64); 7] = [
     (0.0, 0.0),
@@ -89,16 +90,62 @@ fn render_app(frame: &mut Frame) {
                 .labels(vec!["0".bold(), "2.5".into(), "5".bold()]),
         );
 
+    let datasets = vec![Dataset::default()
+        .name("data")
+        .marker(symbols::Marker::Braille)
+        .style(Style::default().fg(Color::Yellow))
+        .graph_type(GraphType::Line)
+        .data(&DATA2)];
+
     let widget_list_items = vec![
         WidgetListItem::new(
-            Paragraph::new(str_1).wrap(Wrap { trim: false }),
+            WidgetListItemType::Paragraph(Paragraph::new(str_1).red().wrap(Wrap { trim: false })),
             frame.size().width as usize,
             textwrap::wrap(str_1, frame.size().width as usize).len(),
         ),
         WidgetListItem::new(
-            Paragraph::new(str_2),
+            WidgetListItemType::Paragraph(Paragraph::new(str_2).green()),
             frame.size().width as usize,
             textwrap::wrap(str_2, frame.size().width as usize).len(),
+        ),
+        WidgetListItem::new(
+            WidgetListItemType::Chart(
+                Chart::new(datasets)
+                    .block(
+                        Block::default()
+                            .title(Span::styled(
+                                "Chart 3",
+                                Style::default()
+                                    .fg(Color::Cyan)
+                                    .add_modifier(Modifier::BOLD),
+                            ))
+                            .borders(Borders::ALL),
+                    )
+                    .x_axis(
+                        Axis::default()
+                            .title("X Axis")
+                            .style(Style::default().fg(Color::Gray))
+                            .bounds([0.0, 50.0])
+                            .labels(vec![
+                                Span::styled("0", Style::default().add_modifier(Modifier::BOLD)),
+                                Span::raw("25"),
+                                Span::styled("50", Style::default().add_modifier(Modifier::BOLD)),
+                            ]),
+                    )
+                    .y_axis(
+                        Axis::default()
+                            .title("Y Axis")
+                            .style(Style::default().fg(Color::Gray))
+                            .bounds([0.0, 5.0])
+                            .labels(vec![
+                                Span::styled("0", Style::default().add_modifier(Modifier::BOLD)),
+                                Span::raw("2.5"),
+                                Span::styled("5", Style::default().add_modifier(Modifier::BOLD)),
+                            ]),
+                    ),
+            ),
+            frame.size().width as usize,
+            15,
         ),
     ];
 
