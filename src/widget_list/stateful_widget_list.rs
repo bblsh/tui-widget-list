@@ -1,16 +1,15 @@
-// use crate::widget_list::widget_list::WidgetListState;
-use ratatui::widgets::*;
+use crate::widget_list::widget_list::WidgetListState;
 
 #[derive(Debug)]
 pub struct StatefulWidgetList<T> {
-    pub state: ListState,
+    pub state: WidgetListState,
     pub items: Vec<T>,
 }
 
 impl<T> Default for StatefulWidgetList<T> {
     fn default() -> Self {
         Self {
-            state: ListState::default(),
+            state: WidgetListState::default(),
             items: Vec::new(),
         }
     }
@@ -19,7 +18,7 @@ impl<T> Default for StatefulWidgetList<T> {
 impl<T> StatefulWidgetList<T> {
     pub fn with_items(items: Vec<T>) -> StatefulWidgetList<T> {
         StatefulWidgetList {
-            state: ListState::default(),
+            state: WidgetListState::default(),
             items,
         }
     }
