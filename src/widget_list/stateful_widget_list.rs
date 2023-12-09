@@ -4,6 +4,7 @@ use crate::widget_list::widget_list::WidgetListState;
 pub struct StatefulWidgetList<T> {
     pub state: WidgetListState,
     pub items: Vec<T>,
+    last_selected: Option<usize>,
 }
 
 impl<T> Default for StatefulWidgetList<T> {
@@ -11,6 +12,7 @@ impl<T> Default for StatefulWidgetList<T> {
         Self {
             state: WidgetListState::default(),
             items: Vec::new(),
+            last_selected: None,
         }
     }
 }
@@ -20,6 +22,7 @@ impl<T> StatefulWidgetList<T> {
         StatefulWidgetList {
             state: WidgetListState::default(),
             items,
+            last_selected: None,
         }
     }
 
@@ -32,7 +35,7 @@ impl<T> StatefulWidgetList<T> {
                     i + 1
                 }
             }
-            None => 0,
+            None => self.last_selected.unwrap_or(0),
         };
         self.state.select(Some(i));
     }
@@ -46,12 +49,19 @@ impl<T> StatefulWidgetList<T> {
                     i - 1
                 }
             }
-            None => 0,
+            None => self.last_selected.unwrap_or(0),
         };
         self.state.select(Some(i));
     }
 
     pub fn unselect(&mut self) {
+        let offset = self.state.offset();
+        self.last_selected = self.state.selected();
         self.state.select(None);
+        *self.state.offset_mut() = offset;
+    }
+
+    pub fn select_last(&mut self) {
+        self.state.select(Some(self.items.len() - 1));
     }
 }
